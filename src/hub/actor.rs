@@ -28,7 +28,7 @@ pub struct HubActor {
 }
 
 impl HubActor {
-    pub async fn start(mut self, mut receiver: mpsc::Receiver<HubCommand>) {
+    pub async fn start(self, mut receiver: mpsc::Receiver<HubCommand>) {
         while let Some(command) = receiver.recv().await {
             match command {
                 HubCommand::AddDriver { driver, response } => {

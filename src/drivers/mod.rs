@@ -1,4 +1,5 @@
 pub mod fake;
+pub mod rest;
 pub mod serial;
 pub mod tcp;
 pub mod tlog;
@@ -18,6 +19,7 @@ use crate::{protocol::Protocol, stats::accumulated::driver::AccumulatedDriverSta
 pub enum Type {
     FakeClient,
     FakeSource,
+    Rest,
     Serial,
     TlogWriter,
     TlogReader,
@@ -202,6 +204,10 @@ pub fn endpoints() -> Vec<ExtInfo> {
         ExtInfo {
             driver_ext: Box::new(udp::server::UdpServerInfo),
             typ: Type::UdpServer,
+        },
+        ExtInfo {
+            driver_ext: Box::new(rest::RestInfo),
+            typ: Type::Rest,
         },
         ExtInfo {
             driver_ext: Box::new(fake::FakeSourceInfo),
