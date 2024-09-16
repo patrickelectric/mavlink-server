@@ -64,7 +64,10 @@ async fn websocket_connection(socket: WebSocket, state: AppState) {
         match message {
             Message::Text(text) => {
                 trace!("WS client received from {identifier}: {text}");
-                broadcast_message(&state, identifier, Message::Text(text)).await;
+                if let Err(error) = state.message_tx.send(text.clone()) {
+                    error!("Failed to send message to main loop: {error:?}");
+                }
+                broadcast_message_websockets(&state, identifier, Message::Text(text)).await;
             }
             Message::Close(frame) => {
                 debug!("WS client {identifier} disconnected: {frame:#?}");
@@ -78,6 +81,23 @@ async fn websocket_connection(socket: WebSocket, state: AppState) {
     state.clients.write().await.remove(&identifier);
     debug!("WS client {identifier} removed");
     send_task.await.unwrap();
+}
+
+async fn broadcast_message_websockets(state: &AppState, sender_identifier: Uuid, message: Message) {
+    let mut clients = state.clients.write().await;
+
+    eprintln!("Send to hub here!");
+
+    for (&client_identifier, tx) in clients.iter_mut() {
+        if client_identifier != sender_identifier {
+            if let Err(error) = tx.send(message.clone()) {
+                error!(
+                    "Failed to send message to client {}: {:?}",
+                    client_identifier, error
+                );
+            }
+        }
+    }
 }
 
 pub async fn send_message_to_all_clients(message: Message) {
@@ -152,21 +172,4 @@ where
 pub fn create_message_receiver() -> broadcast::Receiver<String>
 {
     SERVER.state.message_tx.subscribe()
-}
-
-async fn broadcast_message(state: &AppState, sender_identifier: Uuid, message: Message) {
-    let mut clients = state.clients.write().await;
-
-    eprintln!("Send to hub here!");
-
-    for (&client_identifier, tx) in clients.iter_mut() {
-        if client_identifier != sender_identifier {
-            if let Err(error) = tx.send(message.clone()) {
-                error!(
-                    "Failed to send message to client {}: {:?}",
-                    client_identifier, error
-                );
-            }
-        }
-    }
 }
