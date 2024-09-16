@@ -166,9 +166,7 @@ where
     modifier(&mut router);
 }
 
-pub fn configure_message_receiver<F>(modifier: F)
-where
-    F: FnOnce(&broadcast::Receiver<String>),
+pub fn create_message_receiver() -> broadcast::Receiver<String>
 {
-    modifier(&SERVER.state.message_tx.subscribe());
+    SERVER.state.message_tx.subscribe()
 }
