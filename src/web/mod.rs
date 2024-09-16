@@ -13,7 +13,7 @@ use axum::{
 use futures::{sink::SinkExt, stream::StreamExt};
 use std::future::IntoFuture;
 use std::sync::{Arc, Mutex};
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::{broadcast, mpsc, RwLock};
 use tracing::*;
 use uuid::Uuid;
 
@@ -21,16 +21,14 @@ use lazy_static::lazy_static;
 
 use std::collections::HashMap;
 
-fn default_router(clients: Arc<RwLock<HashMap<Uuid, ClientSender>>>) -> Router {
+fn default_router(state: AppState) -> Router {
     Router::new()
         .route("/", get(endpoints::root))
         .route("/:path", get(endpoints::root))
         .route("/info", get(endpoints::info))
         .route("/mavlink/ws", get(websocket_handler))
         .fallback(get(|| async { (StatusCode::NOT_FOUND, "Not found :(") }))
-        .with_state(AppState {
-            clients,
-        })
+        .with_state(state)
 }
 
 async fn websocket_handler(ws: WebSocketUpgrade, State(state): State<AppState>) -> Response {
@@ -117,13 +115,16 @@ pub async fn send_message_to_all_clients(message: Message) {
 
 lazy_static! {
     static ref SERVER: Arc<SingletonServer> = {
+            let (message_tx, _message_rx) = broadcast::channel(100);
             let clients = Arc::new(RwLock::new(HashMap::new()));
-            let router = Mutex::new(default_router(clients.clone()));
+            let state = AppState {
+                clients,
+                message_tx,
+            };
+            let router = Mutex::new(default_router(state.clone()));
             Arc::new(SingletonServer {
                 router,
-                state: AppState {
-                    clients,
-                },
+                state,
             })
     };
 }
@@ -166,4 +167,11 @@ where
 {
     let mut router = SERVER.router.lock().unwrap();
     modifier(&mut router);
+}
+
+pub fn configure_message_receiver<F>(modifier: F)
+where
+    F: FnOnce(&broadcast::Receiver<String>),
+{
+    modifier(&SERVER.state.message_tx.subscribe());
 }
