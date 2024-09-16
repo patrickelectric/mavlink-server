@@ -30,6 +30,7 @@ pub struct Info {
 }
 
 pub async fn root(filename: Option<Path<String>>) -> impl IntoResponse {
+    println!("Oi! {:#?}", filename);
     let filename = if filename.is_none() {
         "index.html".to_string()
     } else {

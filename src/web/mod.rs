@@ -3,16 +3,19 @@ mod endpoints;
 use axum::{
     extract::{
         ws::{Message, WebSocket, WebSocketUpgrade},
-        Extension,
+        State,
     },
-    response::IntoResponse,
-    http::StatusCode, routing::get, Router
+    http::StatusCode,
+    response::Response,
+    routing::get,
+    Router,
 };
-use tokio::sync::RwLock;
+use futures::{sink::SinkExt, stream::StreamExt};
+use std::future::IntoFuture;
 use std::sync::{Arc, Mutex};
+use tokio::sync::{mpsc, RwLock};
 use tracing::*;
 use uuid::Uuid;
-use futures::{sink::SinkExt, stream::StreamExt};
 
 use lazy_static::lazy_static;
 
@@ -23,25 +26,22 @@ fn default_router() -> Router {
         .route("/", get(endpoints::root))
         .route("/:path", get(endpoints::root))
         .route("/info", get(endpoints::info))
-        .route("/mavlink/ws", get(websocket_clients))
+        .route("/mavlink/ws", get(websocket_handler))
         .fallback(get(|| async { (StatusCode::NOT_FOUND, "Not found :(") }))
+        .with_state(AppState {
+            clients: Arc::new(RwLock::new(HashMap::new())),
+        })
 }
 
-async fn websocket_handler(
-    ws: WebSocketUpgrade,
-    Extension(state): Extension<AppState>,
-) -> impl IntoResponse {
-    ws.on_upgrade(move |socket| websocket_connection(socket, state))
+async fn websocket_handler(ws: WebSocketUpgrade, State(state): State<AppState>) -> Response {
+    ws.on_upgrade(|socket| async { websocket_connection(socket, state).await })
 }
-
 async fn websocket_connection(socket: WebSocket, state: AppState) {
     let identifier = Uuid::new_v4();
-    println!("Client connected with ID: {}", identifier);
+    debug!("WS client connected with ID: {identifier}");
 
-    let (sender, mut receiver) = socket.split();
+    let (mut sender, mut receiver) = socket.split();
     let (tx, mut rx) = mpsc::unbounded_channel::<Message>();
-
-    // Save the sender in the clients map
     state.clients.write().await.insert(identifier, tx);
 
     // Spawn a task to forward messages from the channel to the websocket
@@ -57,20 +57,21 @@ async fn websocket_connection(socket: WebSocket, state: AppState) {
     while let Some(Ok(message)) = receiver.next().await {
         match message {
             Message::Text(text) => {
-                println!("Received from client {}: {}", identifier, text);
+                trace!("WS client received from {identifier}: {text}");
                 broadcast_message(&state, identifier, Message::Text(text)).await;
             }
-            Message::Close(_) => {
-                println!("Client {} disconnected", identifier);
+            Message::Close(frame) => {
+                debug!("WS client {identifier} disconnected: {frame:#?}");
                 break;
             }
             _ => {}
         }
     }
 
-    // Remove client from the hashmap when disconnected
+    // We should be disconnected now, let's remove it
     state.clients.write().await.remove(&identifier);
-    println!("Client {} removed", identifier);
+    debug!("WS client {identifier} removed");
+    send_task.await.unwrap();
 }
 
 async fn broadcast_message(state: &AppState, sender_identifier: Uuid, message: Message) {
@@ -80,7 +81,12 @@ async fn broadcast_message(state: &AppState, sender_identifier: Uuid, message: M
 
     for (&client_identifier, tx) in clients.iter_mut() {
         if client_identifier != sender_identifier {
-            tx.send(message.clone());
+            if let Err(error) = tx.send(message.clone()) {
+                error!(
+                    "Failed to send message to client {}: {:?}",
+                    client_identifier, error
+                );
+            }
         }
     }
 }
@@ -95,11 +101,12 @@ struct SingletonServer {
     router: Mutex<Router>,
 }
 
+#[derive(Clone)]
 struct AppState {
-    clients: Arc<RwLock<HashMap<Uuid, WebSocketSender>>>,
+    clients: Arc<RwLock<HashMap<Uuid, ClientSender>>>,
 }
 
-type WebSocketSender = futures::stream::SplitSink<WebSocket, Message>;
+type ClientSender = mpsc::UnboundedSender<Message>;
 
 pub fn start_server(address: String) {
     let router = SERVER.router.lock().unwrap().clone();
@@ -113,8 +120,8 @@ pub fn start_server(address: String) {
                     continue;
                 }
             };
-            if let Err(e) = axum::serve(listener, router.clone()).await {
-                error!("WebServer error: {}", e);
+            if let Err(error) = axum::serve(listener, router.clone()).into_future().await {
+                error!("WebServer error: {}", error);
             }
         }
     });
