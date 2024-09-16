@@ -21,7 +21,7 @@ use lazy_static::lazy_static;
 
 use std::collections::HashMap;
 
-fn default_router() -> Router {
+fn default_router(clients: Arc<RwLock<HashMap<Uuid, ClientSender>>>) -> Router {
     Router::new()
         .route("/", get(endpoints::root))
         .route("/:path", get(endpoints::root))
@@ -29,7 +29,7 @@ fn default_router() -> Router {
         .route("/mavlink/ws", get(websocket_handler))
         .fallback(get(|| async { (StatusCode::NOT_FOUND, "Not found :(") }))
         .with_state(AppState {
-            clients: Arc::new(RwLock::new(HashMap::new())),
+            clients,
         })
 }
 
@@ -50,6 +50,14 @@ async fn websocket_connection(socket: WebSocket, state: AppState) {
             if sender.send(message).await.is_err() {
                 break;
             }
+        }
+    });
+
+    tokio::spawn(async move {
+        loop {
+            tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+            println!("Sending..");
+            send_message_to_all_clients(Message::Text("Oi".into())).await;
         }
     });
 
@@ -91,19 +99,44 @@ async fn broadcast_message(state: &AppState, sender_identifier: Uuid, message: M
     }
 }
 
+pub async fn send_message_to_all_clients(message: Message) {
+    let state = SERVER.state.clone();
+    let clients = state.clients.read().await;
+    println!("Size: {}", clients.len());
+    for (&client_identifier, tx) in clients.iter() {
+        if let Err(error) = tx.send(message.clone()) {
+            error!(
+                "Failed to send message to client {}: {:?}",
+                client_identifier, error
+            );
+        } else {
+            debug!("Sent message to client {}", client_identifier);
+        }
+    }
+}
+
 lazy_static! {
-    static ref SERVER: Arc<SingletonServer> = Arc::new(SingletonServer {
-        router: Mutex::new(default_router()),
-    });
+    static ref SERVER: Arc<SingletonServer> = {
+            let clients = Arc::new(RwLock::new(HashMap::new()));
+            let router = Mutex::new(default_router(clients.clone()));
+            Arc::new(SingletonServer {
+                router,
+                state: AppState {
+                    clients,
+                },
+            })
+    };
 }
 
 struct SingletonServer {
     router: Mutex<Router>,
+    state: AppState,
 }
 
 #[derive(Clone)]
 struct AppState {
     clients: Arc<RwLock<HashMap<Uuid, ClientSender>>>,
+    message_tx: broadcast::Sender<String>,
 }
 
 type ClientSender = mpsc::UnboundedSender<Message>;
