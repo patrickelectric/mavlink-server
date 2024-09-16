@@ -80,23 +80,6 @@ async fn websocket_connection(socket: WebSocket, state: AppState) {
     send_task.await.unwrap();
 }
 
-async fn broadcast_message(state: &AppState, sender_identifier: Uuid, message: Message) {
-    let mut clients = state.clients.write().await;
-
-    eprintln!("Send to hub here!");
-
-    for (&client_identifier, tx) in clients.iter_mut() {
-        if client_identifier != sender_identifier {
-            if let Err(error) = tx.send(message.clone()) {
-                error!(
-                    "Failed to send message to client {}: {:?}",
-                    client_identifier, error
-                );
-            }
-        }
-    }
-}
-
 pub async fn send_message_to_all_clients(message: Message) {
     let state = SERVER.state.clone();
     let clients = state.clients.read().await;
@@ -169,4 +152,21 @@ where
 pub fn create_message_receiver() -> broadcast::Receiver<String>
 {
     SERVER.state.message_tx.subscribe()
+}
+
+async fn broadcast_message(state: &AppState, sender_identifier: Uuid, message: Message) {
+    let mut clients = state.clients.write().await;
+
+    eprintln!("Send to hub here!");
+
+    for (&client_identifier, tx) in clients.iter_mut() {
+        if client_identifier != sender_identifier {
+            if let Err(error) = tx.send(message.clone()) {
+                error!(
+                    "Failed to send message to client {}: {:?}",
+                    client_identifier, error
+                );
+            }
+        }
+    }
 }
