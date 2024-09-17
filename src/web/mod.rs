@@ -169,7 +169,15 @@ where
     modifier(&mut router);
 }
 
-pub fn create_message_receiver() -> broadcast::Receiver<String>
-{
+pub fn create_message_receiver() -> broadcast::Receiver<String> {
     SERVER.state.message_tx.subscribe()
+}
+
+pub fn broadcast_message(message: String) {
+    let state = SERVER.state.clone();
+    broadcast_message_websockets(
+        &state,
+        "00000000-0000-4000-0000-000000000000".into(),
+        message,
+    );
 }
