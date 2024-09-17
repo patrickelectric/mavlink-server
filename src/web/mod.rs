@@ -177,7 +177,7 @@ pub fn broadcast_message(message: String) {
     let state = SERVER.state.clone();
     broadcast_message_websockets(
         &state,
-        "00000000-0000-4000-0000-000000000000".into(),
-        message,
+        Uuid::parse_str("00000000-0000-4000-0000-000000000000").unwrap(),
+        Message::Text(message),
     );
 }
