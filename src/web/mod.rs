@@ -116,6 +116,19 @@ pub async fn send_message_to_all_clients(message: Message) {
     }
 }
 
+pub fn send_message(message: String) {
+    let state = SERVER.state.clone();
+    broadcast_message_websockets(
+        &state,
+        Uuid::parse_str("00000000-0000-4000-0000-000000000000").unwrap(),
+        Message::Text(message),
+    );
+}
+
+pub fn create_message_receiver() -> broadcast::Receiver<String> {
+    SERVER.state.message_tx.subscribe()
+}
+
 lazy_static! {
     static ref SERVER: Arc<SingletonServer> = {
         let (message_tx, _message_rx) = broadcast::channel(100);
@@ -167,17 +180,4 @@ where
 {
     let mut router = SERVER.router.lock().unwrap();
     modifier(&mut router);
-}
-
-pub fn create_message_receiver() -> broadcast::Receiver<String> {
-    SERVER.state.message_tx.subscribe()
-}
-
-pub fn broadcast_message(message: String) {
-    let state = SERVER.state.clone();
-    broadcast_message_websockets(
-        &state,
-        Uuid::parse_str("00000000-0000-4000-0000-000000000000").unwrap(),
-        Message::Text(message),
-    );
 }
