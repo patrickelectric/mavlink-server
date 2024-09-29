@@ -9,6 +9,9 @@ use include_dir::{include_dir, Dir};
 use mime_guess::from_path;
 use serde::Serialize;
 
+use crate::hub;
+use crate::stats::{self, Stats};
+
 static HTML_DIST: Dir = include_dir!("src/webpage/dist");
 
 #[derive(Serialize, Debug, Default)]
@@ -30,6 +33,17 @@ pub struct Info {
     version: u32,
     /// Service information
     service: InfoContent,
+}
+
+#[derive(Serialize, Debug, Default)]
+pub struct Statistics {
+    /// Driver statistics
+    driver: Option<Stats>,
+    /// Hub statistics
+    hub: Option<Stats>,
+    /// Hub messages statistics
+    hub_messages: Option<Stats>,
+
 }
 
 pub async fn root(filename: Option<Path<String>>) -> impl IntoResponse {
@@ -70,4 +84,20 @@ pub async fn info() -> Json<Info> {
     };
 
     Json(info)
+}
+
+pub async fn statistics() -> Option<Json<Statistics>> {
+    if let Some(status) = stats::as_ref() {
+        let driver_stats = status.driver_stats().await;
+        let hub_stats = status.hub_stats().await;
+        let hub_messages_stats = status.hub_messages_stats().await;
+
+        Some(Json(Statistics {
+            driver: driver_stats.ok(),
+            hub: hub_stats.ok(),
+            hub_messages: hub_messages_stats.ok(),
+        }))
+    } else {
+        None
+    }
 }

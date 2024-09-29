@@ -33,7 +33,7 @@ async fn main() -> Result<()> {
         hub.add_driver(driver).await?;
     }
 
-    let _stats = stats::Stats::new(hub.clone(), tokio::time::Duration::from_secs(1)).await;
+    let stats = stats::init(hub.clone(), tokio::time::Duration::from_secs(1)).await;
 
     web::start_server("0.0.0.0:8080".parse().unwrap());
     wait_ctrlc().await;
