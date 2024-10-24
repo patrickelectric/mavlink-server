@@ -1,10 +1,14 @@
 use anyhow::*;
 use tracing::*;
 
-use mavlink_server::{cli, hub, logger, web};
+use mavlink_server::{cli, hub, logger, web, drivers};
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 10)]
 async fn main() -> Result<()> {
+
+    use drivers::rest::parameters::ardupilot::parameters_dict;
+    dbg!(parameters_dict());
+
     // CLI should be started before logger to allow control over verbosity
     cli::init();
     // Logger should start before everything else to register any log information
