@@ -3,6 +3,7 @@ use std::{collections::HashMap, net::SocketAddr, sync::Arc};
 use anyhow::{Result, anyhow};
 use futures::{Stream, StreamExt};
 use mavlink_codec::{Packet, codec::MavlinkCodec, error::DecoderError};
+use socket2::{Domain, SockAddr, Socket, Type};
 use tokio::{
     net::UdpSocket,
     sync::{RwLock, broadcast},
@@ -126,7 +127,12 @@ impl Driver for UdpServer {
 
             debug!("Trying to bind to address {local_addr:?}...");
 
-            let socket = match UdpSocket::bind(&local_addr).await {
+            let socket = match {
+                let socket = Socket::new(Domain::IPV4, Type::DGRAM, None).unwrap();
+                socket.set_reuse_address(true).unwrap();
+                socket.bind(&SockAddr::from(local_addr)).unwrap();
+                UdpSocket::from_std(socket.into())
+            } {
                 Ok(socket) => Arc::new(socket),
                 Err(error) => {
                     error!("Failed binding UdpServer to address {local_addr:?}: {error:?}");
