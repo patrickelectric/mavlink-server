@@ -232,6 +232,13 @@ impl Driver for Zenoh {
             config
         };
 
+        config
+            .insert_json5("adminspace", r#"{"enabled": true}"#)
+            .expect("Failed to insert adminspace");
+        config
+            .insert_json5("metadata", r#"{"name": "mavlink-camera-manager"}"#)
+            .expect("Failed to insert metadata");
+
         let mut first = true;
         loop {
             if first {
