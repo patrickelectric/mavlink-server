@@ -31,7 +31,8 @@ pub enum Type {
     TlogWriter,
     UdpClient,
     UdpServer,
-    WebSocket,
+    WebSocketClient,
+    WebSocketServer,
     Zenoh,
 }
 
@@ -253,8 +254,12 @@ pub fn endpoints() -> Vec<ExtInfo> {
             typ: Type::UdpServer,
         },
         ExtInfo {
-            driver_ext: Box::new(websocket::WebSocketInfo),
-            typ: Type::WebSocket,
+            driver_ext: Box::new(websocket::client::WebSocketClientInfo),
+            typ: Type::WebSocketClient,
+        },
+        ExtInfo {
+            driver_ext: Box::new(websocket::server::WebSocketServerInfo),
+            typ: Type::WebSocketServer,
         },
         ExtInfo {
             driver_ext: Box::new(fake::FakeSinkInfo),
