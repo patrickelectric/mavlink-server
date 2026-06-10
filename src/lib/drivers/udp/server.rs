@@ -148,7 +148,7 @@ impl Driver for UdpServer {
 
     #[instrument(level = "debug", skip(self))]
     fn info(&self) -> Box<dyn DriverInfo> {
-        return Box::new(UdpServerInfo);
+        Box::new(UdpServerInfo)
     }
 
     fn name(&self) -> Arc<String> {
