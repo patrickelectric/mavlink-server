@@ -100,7 +100,7 @@ ws://<host>:8080/v1/rest/ws
 | `--udp-server-timeout <SEC>` | UDP client inactivity timeout in seconds | `10` |
 | `--mavlink-system-id <ID>` | MAVLink System ID | `1` |
 | `--mavlink-component-id <ID>` | MAVLink Component ID | `191` |
-| `--mavlink-heartbeat-frequency <Hz>` | Heartbeat frequency in Hz | `1` |
+| `--mavlink-heartbeat-frequency <Hz>` | Heartbeat frequency in Hz (`0` disables the heartbeat) | `1` |
 | `--send-initial-heartbeats` | Send initial burst of heartbeats (0.1s apart) | — |
 | `--mavlink-version <1\|2>` | MAVLink protocol version | `2` |
 | `--default-api-version <VER>` | Default REST API version (removes path prefix) | `1` |
