@@ -1,4 +1,5 @@
 mod app;
+mod clipboard;
 mod components_names;
 mod messages;
 mod messages_names;
