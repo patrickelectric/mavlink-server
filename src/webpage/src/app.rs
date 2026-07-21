@@ -701,6 +701,31 @@ pub fn add_last_update_row(
     });
 }
 
+/// Formats a numeric value for display, avoiding the noise of full `f64` precision.
+///
+/// Integers are shown without decimals, fractional values are rounded to two decimals with
+/// trailing zeros trimmed, and tiny nonzero values fall back to a compact scientific form so
+/// they are not rounded away to `0`.
+fn format_numeric(value: f64) -> String {
+    if !value.is_finite() {
+        return value.to_string();
+    }
+
+    if value.fract() == 0.0 {
+        return format!("{value:.0}");
+    }
+
+    if value.abs() < 0.005 {
+        return format!("{value:e}");
+    }
+
+    let formatted = format!("{value:.2}");
+    formatted
+        .trim_end_matches('0')
+        .trim_end_matches('.')
+        .to_string()
+}
+
 pub fn add_row_with_graph(body: &mut TableBody<'_>, field_value: &FieldValue, field_name: &str) {
     body.row(15., |mut row| {
         row.col(|ui| {
@@ -723,7 +748,7 @@ pub fn add_row_with_graph(body: &mut TableBody<'_>, field_value: &FieldValue, fi
                 FieldValue::Numeric(field_info) => field_info
                     .history
                     .back()
-                    .map(|(_time, value)| value.to_string())
+                    .map(|(_time, value)| format_numeric(*value))
                     .unwrap_or("?".to_string()),
                 FieldValue::Text(field_info) => field_info
                     .history
