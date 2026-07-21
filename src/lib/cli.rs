@@ -65,6 +65,7 @@ pub struct Args {
     mavlink_component_id: u8,
 
     /// Sets the frequency of the MAVLink heartbeat message sent by the Mavlink Server
+    /// A value of 0 (or any non-positive value) disables the heartbeat.
     #[arg(long, default_value = "1")]
     mavlink_heartbeat_frequency: f32,
 
