@@ -704,7 +704,15 @@ pub fn add_last_update_row(
 pub fn add_row_with_graph(body: &mut TableBody<'_>, field_value: &FieldValue, field_name: &str) {
     body.row(15., |mut row| {
         row.col(|ui| {
-            let label = ui.label(field_name);
+            let label = ui.label(field_name).on_hover_text("Right-click to copy");
+
+            let name = field_name.to_owned();
+            label.context_menu(|ui| {
+                if ui.button("Copy name").clicked() {
+                    crate::clipboard::copy_to_clipboard(&name);
+                    ui.close_menu();
+                }
+            });
 
             if label.hovered() {
                 show_stats_tooltip(ui, field_value, field_name);
@@ -724,7 +732,14 @@ pub fn add_row_with_graph(body: &mut TableBody<'_>, field_value: &FieldValue, fi
                     .unwrap_or("?".to_string()),
             };
 
-            let label = ui.label(value_str);
+            let label = ui.label(&value_str).on_hover_text("Right-click to copy");
+
+            label.context_menu(|ui| {
+                if ui.button("Copy value").clicked() {
+                    crate::clipboard::copy_to_clipboard(&value_str);
+                    ui.close_menu();
+                }
+            });
 
             if label.hovered() {
                 show_stats_tooltip(ui, field_value, field_name);
