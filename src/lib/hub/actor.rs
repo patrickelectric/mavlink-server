@@ -206,7 +206,15 @@ impl HubActor {
 
                 tokio::time::Duration::from_millis(100)
             } else {
-                tokio::time::Duration::from_secs_f32(1f32.div(*frequency.read().await))
+                let frequency = *frequency.read().await;
+
+                if frequency <= 0f32 {
+                    // Avoid spin lock
+                    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+                    continue;
+                }
+
+                tokio::time::Duration::from_secs_f32(1f32.div(frequency))
             };
 
             tokio::time::sleep(duration).await;
