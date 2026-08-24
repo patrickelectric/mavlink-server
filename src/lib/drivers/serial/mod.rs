@@ -220,3 +220,43 @@ fn port_and_baud_from_url(url: &url::Url) -> (String, u32) {
 
     (port_name, baud_rate)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::drivers::{DriverDescriptionLegacy, DriverInfo, Type};
+
+    #[test]
+    fn port_and_baud_from_url_parses_windows_and_unix() {
+        let cases = [
+            ("serial://COM3:57600", "COM3", 57600),
+            ("serial://COM1?baudrate=57600", "COM1", 57600),
+            ("serial://COM1?arg2=115200", "COM1", 115200),
+            ("serial:///COM3?baudrate=57600", "COM3", 57600),
+            (
+                "serial:///dev/ttyACM0?baudrate=115200",
+                "/dev/ttyACM0",
+                115200,
+            ),
+        ];
+
+        for (input, expected_port, expected_baud) in cases {
+            let url = url::Url::parse(input).unwrap();
+            let (port, baud) = port_and_baud_from_url(&url);
+            assert_eq!(port, expected_port, "{input}");
+            assert_eq!(baud, expected_baud, "{input}");
+        }
+    }
+
+    #[test]
+    fn port_and_baud_from_legacy_com() {
+        let url = SerialInfo
+            .url_from_legacy(DriverDescriptionLegacy {
+                typ: Type::Serial,
+                arg1: "COM3".to_string(),
+                arg2: Some("57600".to_string()),
+            })
+            .unwrap();
+        assert_eq!(port_and_baud_from_url(&url), ("COM3".to_string(), 57600));
+    }
+}
