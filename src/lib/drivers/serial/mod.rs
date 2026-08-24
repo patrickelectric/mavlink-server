@@ -184,20 +184,39 @@ impl DriverInfo for SerialInfo {
     }
 
     fn create_endpoint_from_url(&self, url: &url::Url) -> Option<Arc<dyn Driver>> {
-        let port_name = url.path().to_string();
-        let baud_rate = url
-            .query_pairs()
-            .find_map(|(key, value)| {
-                if key == "baudrate" || key == "arg2" {
-                    value.parse().ok()
-                } else {
-                    None
-                }
-            })
-            .unwrap_or(115200); // Commun baudrate between flight controllers
-
+        let (port_name, baud_rate) = port_and_baud_from_url(url);
         Some(Arc::new(
             Serial::builder("Serial", &port_name, baud_rate).build(),
         ))
     }
+}
+
+fn port_and_baud_from_url(url: &url::Url) -> (String, u32) {
+    let mut port_name = url.path().to_string();
+    // Keep the slash on unix paths like /dev/ttyACM0. Strip it on COM
+    // ports: serialport prepends \\.\ unless the path already starts
+    // with \, so /COM3 fails to open.
+    if port_name.is_empty() || port_name == "/" {
+        port_name = url.host_str().unwrap_or("").to_string();
+    } else if port_name
+        .trim_start_matches('/')
+        .to_ascii_uppercase()
+        .starts_with("COM")
+    {
+        port_name = port_name.trim_start_matches('/').to_string();
+    }
+
+    let baud_rate = url
+        .query_pairs()
+        .find_map(|(key, value)| {
+            if key == "baudrate" || key == "arg2" {
+                value.parse().ok()
+            } else {
+                None
+            }
+        })
+        .or_else(|| url.port().map(u32::from))
+        .unwrap_or(115200); // Commun baudrate between flight controllers
+
+    (port_name, baud_rate)
 }
