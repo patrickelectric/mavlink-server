@@ -53,6 +53,7 @@ fn install_trunk() -> Result<(), Box<dyn std::error::Error>> {
     let output = Command::new("cargo")
         .arg("install")
         .arg("trunk")
+        .arg("--locked")
         .arg("--force")
         .output()?;
 
