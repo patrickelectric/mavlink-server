@@ -68,7 +68,11 @@ impl Serial {
             baud_rate,
             on_message_input: Callbacks::default(),
             on_message_output: Callbacks::default(),
-            stats: Arc::new(RwLock::new(AccumulatedDriverStats::new(name, &SerialInfo))),
+            stats: Arc::new(RwLock::new(AccumulatedDriverStats::new(
+                name,
+                &SerialInfo,
+                &format!("{port_name}:{baud_rate}"),
+            ))),
         })
     }
 }

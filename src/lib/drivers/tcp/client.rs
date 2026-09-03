@@ -78,6 +78,7 @@ impl TcpClient {
             stats: Arc::new(RwLock::new(AccumulatedDriverStats::new(
                 name,
                 &TcpClientInfo,
+                remote_addr,
             ))),
         })
     }

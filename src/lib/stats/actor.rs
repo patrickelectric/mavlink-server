@@ -488,6 +488,7 @@ async fn update_driver_stats(
                 DriverStats {
                     name: current_stats.name.clone(),
                     driver_type: current_stats.driver_type,
+                    endpoint: current_stats.endpoint.clone(),
                     stats: DriverStatsInner {
                         input: new_input_stats,
                         output: new_output_stats,

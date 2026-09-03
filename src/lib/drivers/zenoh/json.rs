@@ -63,7 +63,9 @@ impl Zenoh {
             uuid: Self::generate_uuid(&name),
             on_message_input: Callbacks::default(),
             on_message_output: Callbacks::default(),
-            stats: Arc::new(RwLock::new(AccumulatedDriverStats::new(name, &ZenohInfo))),
+            stats: Arc::new(RwLock::new(AccumulatedDriverStats::new(
+                name, &ZenohInfo, "",
+            ))),
         })
     }
 

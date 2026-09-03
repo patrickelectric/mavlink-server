@@ -13,6 +13,7 @@ pub type DriversStats = IndexMap<DriverUuid, DriverStats>;
 pub struct DriverStats {
     pub name: Arc<String>,
     pub driver_type: &'static str,
+    pub endpoint: String,
     pub stats: DriverStatsInner,
 }
 

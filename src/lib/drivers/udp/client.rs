@@ -77,6 +77,7 @@ impl UdpClient {
             stats: Arc::new(RwLock::new(AccumulatedDriverStats::new(
                 name,
                 &UdpClientInfo,
+                remote_addr,
             ))),
         })
     }

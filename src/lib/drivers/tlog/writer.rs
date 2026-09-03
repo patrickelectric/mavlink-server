@@ -81,6 +81,7 @@ impl TlogWriter {
             stats: Arc::new(RwLock::new(AccumulatedDriverStats::new(
                 name,
                 &TlogWriterInfo,
+                &path_str,
             ))),
         })
     }

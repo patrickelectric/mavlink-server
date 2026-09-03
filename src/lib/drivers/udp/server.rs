@@ -97,6 +97,7 @@ impl UdpServer {
             stats: Arc::new(RwLock::new(AccumulatedDriverStats::new(
                 name,
                 &UdpServerInfo,
+                local_addr,
             ))),
         })
     }
