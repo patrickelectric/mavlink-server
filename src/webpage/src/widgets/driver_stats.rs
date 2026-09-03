@@ -79,6 +79,15 @@ impl<'a> DriverStatsWidget<'a> {
 
                         body.row(15., |mut row| {
                             row.col(|ui| {
+                                ui.label("Endpoint");
+                            });
+                            row.col(|ui| {
+                                ui.label(&driver_stats.endpoint);
+                            });
+                        });
+
+                        body.row(15., |mut row| {
+                            row.col(|ui| {
                                 ui.label("UUID");
                             });
                             row.col(|ui| {

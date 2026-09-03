@@ -22,6 +22,7 @@ pub struct DriversStats<B, M, D> {
 pub struct DriverStats<B, M, D> {
     pub name: String,
     pub driver_type: String,
+    pub endpoint: String,
     pub stats: DriverStatsInner<B, M, D>,
 }
 
@@ -42,6 +43,7 @@ impl DriversStatsHistorical {
                 .or_insert(DriverStats {
                     name: sample_driver_stats.name,
                     driver_type: sample_driver_stats.driver_type,
+                    endpoint: sample_driver_stats.endpoint,
                     stats: Default::default(),
                 });
 
