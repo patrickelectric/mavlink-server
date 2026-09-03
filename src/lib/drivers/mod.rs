@@ -330,6 +330,7 @@ mod tests {
                 stats: Arc::new(RwLock::new(AccumulatedDriverStats::new(
                     name,
                     &ExampleDriverInfo,
+                    "",
                 ))),
             })
         }

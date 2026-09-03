@@ -78,6 +78,7 @@ impl TcpServer {
             stats: Arc::new(RwLock::new(AccumulatedDriverStats::new(
                 name,
                 &TcpServerInfo,
+                local_addr,
             ))),
         })
     }

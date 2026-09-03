@@ -18,14 +18,16 @@ pub trait AccumulatedDriverStatsProvider {
 pub struct AccumulatedDriverStats {
     pub name: Arc<String>,
     pub driver_type: &'static str,
+    pub endpoint: String,
     pub stats: AccumulatedDriverStatsInner,
 }
 
 impl AccumulatedDriverStats {
-    pub fn new(name: Arc<String>, info: &dyn DriverInfo) -> Self {
+    pub fn new(name: Arc<String>, info: &dyn DriverInfo, endpoint: &str) -> Self {
         Self {
             name,
             driver_type: info.name(),
+            endpoint: endpoint.to_string(),
             stats: AccumulatedDriverStatsInner::default(),
         }
     }

@@ -94,6 +94,7 @@ impl WebSocketServerDriver {
             stats: Arc::new(RwLock::new(AccumulatedDriverStats::new(
                 name,
                 &WebSocketServerInfo,
+                local_addr,
             ))),
         })
     }

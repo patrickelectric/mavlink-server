@@ -68,6 +68,7 @@ impl ZenohRaw {
             stats: Arc::new(RwLock::new(AccumulatedDriverStats::new(
                 name,
                 &ZenohRawInfo,
+                "",
             ))),
         })
     }

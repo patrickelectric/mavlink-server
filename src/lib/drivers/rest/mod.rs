@@ -65,7 +65,9 @@ impl Rest {
             uuid: Self::generate_uuid(&name),
             on_message_input: Callbacks::default(),
             on_message_output: Callbacks::default(),
-            stats: Arc::new(RwLock::new(AccumulatedDriverStats::new(name, &RestInfo))),
+            stats: Arc::new(RwLock::new(AccumulatedDriverStats::new(
+                name, &RestInfo, "",
+            ))),
         })
     }
 

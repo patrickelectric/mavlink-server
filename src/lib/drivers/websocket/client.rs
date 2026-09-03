@@ -86,6 +86,7 @@ impl WebSocketClientDriver {
             stats: Arc::new(RwLock::new(AccumulatedDriverStats::new(
                 name,
                 &WebSocketClientInfo,
+                remote_addr,
             ))),
         })
     }

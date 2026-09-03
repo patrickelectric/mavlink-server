@@ -47,6 +47,7 @@ impl FakeSink {
             stats: Arc::new(RwLock::new(AccumulatedDriverStats::new(
                 name,
                 &FakeSinkInfo,
+                "",
             ))),
         })
     }
@@ -270,6 +271,7 @@ impl FakeSource {
             stats: Arc::new(RwLock::new(AccumulatedDriverStats::new(
                 name,
                 &FakeSourceInfo,
+                "",
             ))),
             system_id: params.system_id,
             component_id: params.component_id,
