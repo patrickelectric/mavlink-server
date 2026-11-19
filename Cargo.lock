@@ -2413,7 +2413,7 @@ dependencies = [
 [[package]]
 name = "mavlink-codec"
 version = "0.1.0"
-source = "git+https://github.com/bluerobotics/rust-mavlink-codec#04cb141b64ddb70fe57fa80a660162ed35f3592d"
+source = "git+https://github.com/patrickelectric/rust-mavlink-codec?rev=c8e7f29#c8e7f29ac5b3ca6c1f4a81a9837eba0459051a70"
 dependencies = [
  "bytes",
  "log",
