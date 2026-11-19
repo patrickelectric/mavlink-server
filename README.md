@@ -105,6 +105,7 @@ ws://<host>:8080/v1/rest/ws
 | `--mavlink-version <1\|2>` | MAVLink protocol version | `2` |
 | `--default-api-version <VER>` | Default REST API version (removes path prefix) | `1` |
 | `--zenoh-config-file <PATH>` | Path to Zenoh config file | — |
+| `--forward-unknown-messages` | Forward messages unknown to the compiled dialect, without CRC validation | — |
 | `-h, --help` | Show help message | — |
 | `-V, --version` | Show version info | — |
 
