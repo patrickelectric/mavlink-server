@@ -107,7 +107,10 @@ impl WebSocketServerDriver {
     ) -> Result<()> {
         debug!("New WebSocket client");
 
-        let codec = MavlinkCodec::<true, true, false, false, false, false>::default();
+        let codec = MavlinkCodec::<true, true, false, false, false, false> {
+            accept_unknown_msgid: crate::cli::forward_unknown_messages(),
+            ..Default::default()
+        };
         let (writer, reader) = WebSocketServerAdapter::new(socket, codec).split();
 
         if let Err(reason) = default_send_receive_run(writer, reader, identifier, context).await {
