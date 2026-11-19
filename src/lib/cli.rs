@@ -88,6 +88,10 @@ pub struct Args {
     /// Sets the zenoh configuration file path
     #[arg(long, value_name = "PATH")]
     zenoh_config_file: Option<String>,
+
+    /// Forwards messages unknown to the compiled dialect, they can't be CRC validated
+    #[arg(long, default_value = "false")]
+    forward_unknown_messages: bool,
 }
 
 #[instrument(level = "trace")]
@@ -266,6 +270,13 @@ pub fn default_api_version() -> u8 {
 #[instrument(level = "debug")]
 pub fn zenoh_config_file() -> Option<String> {
     args().zenoh_config_file.clone()
+}
+
+// Drivers are also created by tests that don't initialize the manager
+pub fn forward_unknown_messages() -> bool {
+    MANAGER
+        .get()
+        .is_some_and(|manager| manager.clap_matches.forward_unknown_messages)
 }
 
 #[cfg(test)]
