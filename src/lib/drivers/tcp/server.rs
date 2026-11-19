@@ -92,7 +92,10 @@ impl TcpServer {
     ) -> Result<()> {
         debug!("New TCP client");
 
-        let codec = MavlinkCodec::<true, true, false, false, false, false>::default();
+        let codec = MavlinkCodec::<true, true, false, false, false, false> {
+            accept_unknown_msgid: crate::cli::forward_unknown_messages(),
+            ..Default::default()
+        };
         let (writer, reader) = Framed::new(stream, codec).split();
 
         if let Err(reason) = default_send_receive_run(writer, reader, &remote_addr, &context).await
