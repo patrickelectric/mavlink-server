@@ -138,7 +138,10 @@ impl Driver for UdpServer {
 
             debug!("Waiting for clients...");
 
-            let codec = MavlinkCodec::<true, true, false, false, false, false>::default();
+            let codec = MavlinkCodec::<true, true, false, false, false, false> {
+                accept_unknown_msgid: crate::cli::forward_unknown_messages(),
+                ..Default::default()
+            };
             let (_writer, mut reader) = UdpFramed::new(socket.clone(), codec).split();
 
             if let Err(error) = udp_receive_task(&mut reader, socket, local_addr, &context).await {
@@ -291,7 +294,10 @@ fn spawn_send_task(
     client_addr: SocketAddr,
     context: &SendReceiveContext,
 ) -> JoinHandle<std::result::Result<(), anyhow::Error>> {
-    let codec = MavlinkCodec::<true, true, false, false, false, false>::default();
+    let codec = MavlinkCodec::<true, true, false, false, false, false> {
+        accept_unknown_msgid: crate::cli::forward_unknown_messages(),
+        ..Default::default()
+    };
     let (mut writer, _reader) = UdpFramed::new(socket.clone(), codec).split();
 
     tokio::spawn({
