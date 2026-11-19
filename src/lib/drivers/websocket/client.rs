@@ -130,7 +130,10 @@ impl Driver for WebSocketClientDriver {
 
             debug!("Successfully connected");
 
-            let codec = MavlinkCodec::<true, true, false, false, false, false>::default();
+            let codec = MavlinkCodec::<true, true, false, false, false, false> {
+                accept_unknown_msgid: crate::cli::forward_unknown_messages(),
+                ..Default::default()
+            };
             let (writer, reader) = WebSocketClientAdapter::new(ws_stream, codec).split();
 
             if let Err(reason) =
